@@ -8,6 +8,7 @@ import os
 import pandas as pd
 import vsm
 import utils
+from nltk.corpus import wordnet as wn
 
 import platform
 if platform.system() == 'Darwin': # un mac
@@ -229,3 +230,43 @@ def ttest(df):
             X[i,j] = (X[i,j] / X_sum - P_i[i] * P_j[j]) / np.sqrt(P_i[i] * P_j[j])
     return pd.DataFrame(X, index=df.index, columns=df.columns)
 
+def subword_enrichment(df, n=4):
+    # 1. Use `vsm.ngram_vsm` to create a character-level
+    # VSM from `df`, using the above parameter `n` to
+    # set the size of the ngrams.
+
+    cf = vsm.ngram_vsm(df, n) # Character level VSM
+
+
+    # 2. Use `vsm.character_level_rep` to get the representation
+    # for every word in `df` according to the character-level
+    # VSM you created above.
+    
+    clr = [] # character level representation
+    for w, _ in df.iterrows():
+        clr.append(vsm.character_level_rep(w, cf, n))
+    clr = np.array(clr)
+
+    # 3. For each representation created at step 2, add in its
+    # original representation from `df`. (This should use
+    # element-wise addition; the dimensionality of the vectors
+    # will be unchanged.)
+
+    # subword enrichment :swe
+    swe = df.to_numpy() + clr
+
+
+    # 4. Return a `pd.DataFrame` with the same index and column
+    # values as `df`, but filled with the new representations
+    # created at step 3.
+
+    return pd.DataFrame(swe, index=df.index, columns=df.columns)
+
+# retrofitting
+def get_wordnet_edges():
+    edges = defaultdict(set)
+    for ss in wn.all_synsets():
+        lem_names = {lem.name() for lem in ss.lemmas()}
+        for lem in lem_names:
+            edges[lem] |= lem_names
+    return edges
