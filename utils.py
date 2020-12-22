@@ -20,6 +20,32 @@ END_SYMBOL = "</s>"
 UNK_SYMBOL = "$UNK"
 
 
+import os
+# import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+
+def get_data_path():
+    """
+    --> chemin vers le répertoire où sont stockées les données en fonction de la plateforme de travail
+    """
+    # local
+    local_data_path = '/Users/pierrejaumier/Data/cs224u'
+    # ml-server
+    server_data_path = '/home/neo/Data/cs224u'
+
+    data_path = None
+
+    if os.path.isdir(local_data_path):
+        data_path = local_data_path
+    elif os.path.isdir(server_data_path):
+        data_path = server_data_path
+    else:
+        print("Problème lors de l'accès aux données")
+    return data_path
+
+
 def glove2dict(src_filename):
     """
     GloVe vectors file reader.
